@@ -1,0 +1,36 @@
+#!/usr/local/bin/python
+
+import sys
+import os
+import struct
+import binascii
+
+if len(sys.argv) < 2:
+	print "Usage: search [path DEFAULT working directory] [expressions...] (strings, binary \\x90\\x90)"
+	sys.exit(0)
+if len(sys.argv) == 2:
+	path = os.getcwd()
+	startArg = 1
+if (len(sys.argv)) == 3:
+	path = sys.argv[1]
+	startArg = 2
+toSearchNum = len(sys.argv)
+buf = ""
+for dirpath,dirnames,filenames in os.walk(path):
+	for i in filenames:
+		a = os.path.join(dirpath,i)
+		if (os.stat(a).st_size > 0x20000000):
+			print "[!] %s is big file, check it manually" % i
+		f = open(a,'rb')
+		buf = f.read()
+		for j in range(startArg,toSearchNum):
+			if "0x" in sys.argv[j]:
+				b = ""
+				for k in range(2,len(sys.argv[j]),2):
+					one = chr(int(sys.argv[j][k:k+2],16))
+					b += one
+				if b in buf:
+					print "[*] pattern %s found in %s " % (sys.argv[j],a)	
+			if sys.argv[j] in buf:
+				print "[*] pattern %s found in %s " % (sys.argv[j],a)
+		f.close()
